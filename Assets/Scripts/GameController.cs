@@ -17,8 +17,9 @@ public class GameController : MonoBehaviour {
 
 	private GameObject[] m_players;
 	private Grid m_grid;
-	private Anim countDownAnim;
-	private Text timeLeftText;
+	private Anim m_countDownAnim;
+	private Text m_timeLeftText;
+	private bool[] m_playersSelectionDone;
 	
 	// Use this for initialization
 	void Start () {
@@ -31,13 +32,14 @@ public class GameController : MonoBehaviour {
 		// Create players from template
 		int numPlayers = G.get().players.Count;
 		m_players = new GameObject[numPlayers];
+		m_playersSelectionDone = new bool[numPlayers];
 		for (int i = 0; i < numPlayers; i++) {
 			Debug.Log ("Creating Player " + i);
 			m_players[i] = Instantiate(playerTemplate);
 			m_players[i].transform.parent = gridWorld.transform;
 		}
 		
-		timeLeftText = GameObject.Find ("Time Left Text").GetComponent<Text>();
+		m_timeLeftText = GameObject.Find ("Time Left Text").GetComponent<Text>();
 		
 		onGameReset();
 	}
@@ -46,8 +48,8 @@ public class GameController : MonoBehaviour {
 	void Update () {
 		AnimMaster.get ().update();
 		
-		if (countDownAnim != null) {
-			timeLeftText.text = "Time Left: " + countDownAnim.getTimeRemainingSeconds().ToString ("F1") + "s";
+		if (m_countDownAnim != null) {
+			m_timeLeftText.text = "Time Left: " + m_countDownAnim.getTimeRemainingSeconds().ToString ("F1") + "s";
 		}
 	}
 	
@@ -64,7 +66,7 @@ public class GameController : MonoBehaviour {
 			m_players[i].GetComponent<Player>().init(this, i, new Grid.Gid(startingX, 0));
 		}
 		
-		onGameStart ();
+		AnimMaster.delay ("gameStartDelay", this.gameObject, 0.5f).onComplete("onGameStart");
 	}
 	
 	void onGameStart() {
@@ -75,21 +77,42 @@ public class GameController : MonoBehaviour {
 	void onGameRoundStart() {
 		Debug.Log ("onGameRoundStart");
 		AnimMaster.clearWithKey("roundCountDown");
-		countDownAnim = AnimMaster.delay("roundCountDown", this.gameObject, G.get ().COUNTDOWN_SECONDS).onComplete("onGameRoundEnd");
-		foreach (GameObject player in m_players) {
+		m_countDownAnim = AnimMaster.delay("roundCountDown", this.gameObject, G.get ().COUNTDOWN_SECONDS).onComplete("onGameRoundEnd");
+		for (int i = 0; i < m_players.Length; i++) {
+			GameObject player = m_players[i];
 			player.SendMessage("onGameRoundStart");
+			// reset selection done bool
+			m_playersSelectionDone[i] = false;
 		}
 	}
 
-	void onGameRoundEnd() {
-		Debug.Log ("onGameRoundEnd");
-		countDownAnim = null;
-		timeLeftText.text = "";
-	}
-			
-	void onGameUpdate() {
+	public void onPlayerSelectionDone(int playerIndex) {
+		Debug.Log ("onPlayerSelectionDone " + playerIndex);
+		m_playersSelectionDone[playerIndex] = true;
+		
+		// if all players are done, proceed to round end.
+		foreach (bool done in m_playersSelectionDone) {
+			if (!done) {
+				return;
+			}
+		}
+		onGameRoundEnd();
 	}
 	
+	void onGameRoundEnd() {
+		Debug.Log ("onGameRoundEnd");
+		AnimMaster.clearWithKey("roundCountDown");
+		m_countDownAnim = null;
+		m_timeLeftText.text = "";
+		
+		foreach(GameObject player in m_players) {
+			player.SendMessage("onExecuteChosenDirection");
+		}
+		
+		Debug.Log ("wait for game round start");
+		AnimMaster.delay ("gameRoundStartDelay", this.gameObject, 1.0f).onComplete ("onGameRoundStart");
+	}
+
 	void onGameWin() {
 	}
 	

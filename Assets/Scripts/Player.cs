@@ -13,6 +13,8 @@ public class Player : MonoBehaviour {
 	private List<Direction> m_directions;
 	private GameController m_gameController;
 	private GameObject m_playerHead;
+	private Direction m_chosenDir = Direction.UP;
+	private Grid.Gid m_chosenGid;
 
 	// Called before Start() immediately after Player is created.
 	public void init(GameController gameController, int playerIndex, Grid.Gid startGid) {
@@ -54,7 +56,6 @@ public class Player : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		m_playerHead = this.transform.FindChild("Player Sprite Head").gameObject;
-		
 	}
 	
 	// Update is called once per frame
@@ -75,6 +76,8 @@ public class Player : MonoBehaviour {
 	void onGameRoundStart() {
 		Debug.Log ("player onGameRoundStart");
 		m_acceptInput = true;
+		// Default the chosen gid, player may overwrite but if there was no input, they would execute this.
+		m_chosenGid = getNextGid(m_directions[m_directions.Count - 1]);
 	}
 	
 	void chooseDirection(Direction dir) {
@@ -85,26 +88,9 @@ public class Player : MonoBehaviour {
 			// invalid move to go backwards, do nothing
 			return;
 		}
-		Grid.Gid prevGid = m_gidHistory[m_gidHistory.Count - 1];
-		// TODO should this size be the size of the piece we're going to place?
-		int spriteSize = m_playerHead.GetComponent<Tile>().tileSize;
-		Grid.Gid nextGid;
-		switch (dir) {
-			case Direction.UP:
-			nextGid = new Grid.Gid(prevGid.x, prevGid.y + spriteSize);
-				break;
-			case Direction.DOWN:
-			nextGid = new Grid.Gid(prevGid.x, prevGid.y - spriteSize);
-				break;
-			case Direction.LEFT:
-			nextGid = new Grid.Gid(prevGid.x - spriteSize, prevGid.y);
-				break;
-			case Direction.RIGHT:
-			nextGid = new Grid.Gid(prevGid.x + spriteSize, prevGid.y);
-				break;
-			default:
-				throw new UnityException("Unknown dir " + dir);
-		}
+		
+		Grid.Gid nextGid = getNextGid(dir);
+		
 		if (m_gameController.Grid.outOfBounds(nextGid)) {
 			Debug.Log("player " + m_playerIndex + " tried to move out of bounds " + nextGid + " " + dir);
 			// invalid move to the walls.
@@ -115,19 +101,30 @@ public class Player : MonoBehaviour {
 			// invalid move into occupied cells
 			return;
 		}
-		m_directions.Add(dir);
 		
+		m_chosenDir = dir;
+		m_chosenGid = nextGid;
+		
+		m_gameController.onPlayerSelectionDone(m_playerIndex);
+		m_acceptInput = false;
+	}
+	
+	// Chosen direction is always set, so the player will always execute the previous move even if there was no input.
+	void onExecuteChosenDirection() {
+		Direction lastDirection = m_directions[m_directions.Count - 1];
+		m_directions.Add(m_chosenDir);
+
 		// Add a new body part where the head is
-		GameObject nextBodyPart = getNextSprite(lastDirection, dir, m_playerHead.transform.localPosition);
-		addToGrid(nextGid, nextBodyPart);
+		GameObject nextBodyPart = getNextSprite(lastDirection, m_chosenDir, m_playerHead.transform.localPosition);
+		addToGrid(m_chosenGid, nextBodyPart);
 		
 		// Move head
-		Grid.Gid headGid = Grid.Gid.clone(nextGid);
+		Grid.Gid headGid = Grid.Gid.clone(m_chosenGid);
 		// head should be relative to player start since the parent is the same.
 		headGid.sub(m_gidHistory[0]);
-		int offsetForCenter = spriteSize / 2;
+		int offsetForCenter = nextBodyPart.GetComponent<Tile>().tileSize / 2;
 		m_playerHead.transform.localPosition = headGid.getGridWorldPosCenter(offsetForCenter);
-		m_playerHead.transform.localRotation = Quaternion.AngleAxis(getAngle(dir), ROTATION_AXIS);
+		m_playerHead.transform.localRotation = Quaternion.AngleAxis(getAngle(m_chosenDir), ROTATION_AXIS);
 	}
 	
 	void expand() {
@@ -236,6 +233,31 @@ public class Player : MonoBehaviour {
 		return nextSprite;
 	}
 	
+	Grid.Gid getNextGid(Direction dir) {
+		Grid.Gid prevGid = m_gidHistory[m_gidHistory.Count - 1];
+		// TODO should this size be the size of the piece we're going to place?
+		int spriteSize = m_playerHead.GetComponent<Tile>().tileSize;
+		
+		Grid.Gid nextGid;
+		switch (dir) {
+		case Direction.UP:
+			nextGid = new Grid.Gid(prevGid.x, prevGid.y + spriteSize);
+			break;
+		case Direction.DOWN:
+			nextGid = new Grid.Gid(prevGid.x, prevGid.y - spriteSize);
+			break;
+		case Direction.LEFT:
+			nextGid = new Grid.Gid(prevGid.x - spriteSize, prevGid.y);
+			break;
+		case Direction.RIGHT:
+			nextGid = new Grid.Gid(prevGid.x + spriteSize, prevGid.y);
+			break;
+		default:
+			throw new UnityException("Unknown dir " + dir);
+		}
+		return nextGid;
+	}
+
 	// assumes the up is 0.
 	private float getAngle(Direction dir) {
 		switch (dir) {

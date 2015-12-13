@@ -46,8 +46,12 @@ public class AnimMaster
 		for (int i = anims.Count-1; i >= 0; i--) {
 			Anim anim = anims[i];
 			anim.elapse(deltaTime);
+		}
+		// Do deletion in a separate loop because elapse may call onComplete which may add other anims into the loop.
+		for (int i = anims.Count-1; i >= 0; i--) {
+			Anim anim = anims[i];
 			if (anim.isOver()) {
-				anims.RemoveAt (i);
+				anims.Remove(anim);
 			}
 		}
 	}
