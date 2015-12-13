@@ -17,10 +17,10 @@ public class TitleMenuController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (Input.GetKeyUp(KeyCode.F)) {
-			OnAddPlayer(0);
+			onAddPlayer(0);
 		}
 		if (Input.GetKeyUp(KeyCode.J)) {
-			OnAddPlayer(1);
+			onAddPlayer(1);
 		}
 		if (Input.GetKeyUp(KeyCode.Space)) {
 			if (playerIndices.Count > 1) {
@@ -31,7 +31,7 @@ public class TitleMenuController : MonoBehaviour {
 		}
 	}
 	
-	void OnAddPlayer(int index) {
+	void onAddPlayer(int index) {
 		if (!playerIndices.Contains(index)) {
 			playerIndices.Add(index);
 			playersJoinedText.text += "\nPlayer " + index;
