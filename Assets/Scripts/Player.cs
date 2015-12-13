@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public class Player : MonoBehaviour {
 
+	private static Vector3 ROTATION_AXIS = new Vector3(0,0,1);
+
 	private bool m_acceptInput;
 	private int m_playerIndex;
 	private Dictionary<Direction, KeyCode> m_controls;
@@ -24,7 +26,7 @@ public class Player : MonoBehaviour {
 		this.m_directions.Add(Direction.UP);
 		m_gameController.Grid.add(startGid, this.gameObject);
 		Debug.Log("player start " + startGid.x + "," + startGid.y);
-		this.transform.localPosition = startGid.gridWorldPosCenter;
+		this.transform.localPosition = startGid.gridWorldPos;
 		this.transform.localScale = new Vector2(1, 1);
 		
 		
@@ -84,6 +86,7 @@ public class Player : MonoBehaviour {
 			return;
 		}
 		Grid.Gid prevGid = m_gidHistory[m_gidHistory.Count - 1];
+		// TODO should this size be the size of the piece we're going to place?
 		int spriteSize = m_playerHead.GetComponent<Tile>().tileSize;
 		Grid.Gid nextGid;
 		switch (dir) {
@@ -120,9 +123,11 @@ public class Player : MonoBehaviour {
 		
 		// Move head
 		Grid.Gid headGid = Grid.Gid.clone(nextGid);
+		// head should be relative to player start since the parent is the same.
 		headGid.sub(m_gidHistory[0]);
-		m_playerHead.transform.localPosition = headGid.gridWorldPosCenter;
-		m_playerHead.transform.localRotation = Quaternion.AngleAxis(getAngle(dir), new Vector3(0, 0, 1));
+		int offsetForCenter = spriteSize / 2;
+		m_playerHead.transform.localPosition = headGid.getGridWorldPosCenter(offsetForCenter);
+		m_playerHead.transform.localRotation = Quaternion.AngleAxis(getAngle(dir), ROTATION_AXIS);
 	}
 	
 	void expand() {
@@ -164,7 +169,7 @@ public class Player : MonoBehaviour {
 				break;
 			case Direction.RIGHT:
 				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (new Vector3(0, 0, 1), 90.0f, Space.Self);
+				nextSprite.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
 				break;
 			default:
 				throw new UnityException("Illegal next dir " + nextDir + " from prev dir " + prevDir);
@@ -177,11 +182,11 @@ public class Player : MonoBehaviour {
 				break;
 			case Direction.LEFT:
 				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (new Vector3(0, 0, 1), -90.0f, Space.Self);
+				nextSprite.transform.Rotate (ROTATION_AXIS, -90.0f, Space.Self);
 				break;
 			case Direction.RIGHT:
 				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (new Vector3(0, 0, 1), 180.0f, Space.Self);
+				nextSprite.transform.Rotate (ROTATION_AXIS, 180.0f, Space.Self);
 				break;
 			default:
 				throw new UnityException("Illegal next dir " + nextDir + " from prev dir " + prevDir);
@@ -191,15 +196,15 @@ public class Player : MonoBehaviour {
 			switch (nextDir) {
 			case Direction.UP:
 				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (new Vector3(0, 0, 1), 180.0f, Space.Self);
+				nextSprite.transform.Rotate (ROTATION_AXIS, 180.0f, Space.Self);
 				break;
 			case Direction.DOWN:
 				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (new Vector3(0, 0, 1), 90.0f, Space.Self);
+				nextSprite.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
 				break;
 			case Direction.LEFT:
 				nextSprite = Instantiate(m_gameController.playerUpTemplate);
-				nextSprite.transform.Rotate (new Vector3(0, 0, 1), 90.0f, Space.Self);
+				nextSprite.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
 				break;
 			default:
 				throw new UnityException("Illegal next dir " + nextDir + " from prev dir " + prevDir);
@@ -209,14 +214,14 @@ public class Player : MonoBehaviour {
 			switch (nextDir) {
 			case Direction.UP:
 				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (new Vector3(0, 0, 1), -90.0f, Space.Self);
+				nextSprite.transform.Rotate (ROTATION_AXIS, -90.0f, Space.Self);
 				break;
 			case Direction.DOWN:
 				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
 				break;
 			case Direction.RIGHT:
 				nextSprite = Instantiate(m_gameController.playerUpTemplate);
-				nextSprite.transform.Rotate (new Vector3(0, 0, 1), 90.0f, Space.Self);
+				nextSprite.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
 				break;
 			default:
 				throw new UnityException("Illegal next dir " + nextDir + " from prev dir " + prevDir);

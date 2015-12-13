@@ -57,10 +57,6 @@ public class Grid
 		public Vector2 gridWorldPos {
 			get { return new Vector2(m_x, m_y); }
 		}
-		
-		public Vector2 gridWorldPosCenter {
-			get { return new Vector2(m_x + 0.5f, m_y + 0.5f); }
-		}
 
 		public Gid(int gridX, int gridY) {
 			this.m_x = gridX;
@@ -83,6 +79,14 @@ public class Grid
 			return new Gid(gid.x, gid.y);
 		}
 
+		public Vector2 getGridWorldPosCenter(int tileSize) {
+			return new Vector2(m_x + tileSize, m_y + tileSize);
+		}
+
+		public override string ToString ()
+		{
+			return string.Format ("[Gid: x={0}, y={1}]", x, y);
+		}
 //		public static Gid fromScreen(Vector2 position) {
 //			return new Gid(
 //				(int) (position.x / G.get ().GRID_SIZE),
