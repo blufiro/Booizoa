@@ -11,6 +11,7 @@ public class GameController : MonoBehaviour {
 	public GameObject playerLeftRotationTemplate;
 	public GameObject playerUpTemplate;
 	public Text	playerScoreStatsTextTemplate;
+	public Text okTextTemplate;
 
 	public Grid Grid
 	{
@@ -18,18 +19,22 @@ public class GameController : MonoBehaviour {
 	}
 
 	private GameObject[] m_players;
-	private bool[] m_playersSelectionDone;
+	private Text[] m_playersSelectionDoneText;
 	private bool[] m_playersCheckSpace;
 	private Grid m_grid;
 	private Anim m_countDownAnim;
+	private GameObject m_canvasGob;
 	private Text m_timeLeftText;
+	private Text m_goText;
 	private Text m_debugText;
 	private Image m_scoreStatsPopup;
 	private List<Text> m_playerScoresTexts;
 	
 	// Use this for initialization
 	void Start () {
+		m_canvasGob = GameObject.Find ("Canvas");
 		m_timeLeftText = GameObject.Find ("Time Left Text").GetComponent<Text>();
+		m_goText = GameObject.Find ("Go Text").GetComponent<Text>();
 		m_debugText = GameObject.Find ("Debug Text").GetComponent<Text>();
 		m_scoreStatsPopup = GameObject.Find ("Score Stats Popup").GetComponent<Image>();
 		
@@ -42,7 +47,7 @@ public class GameController : MonoBehaviour {
 		// Create players from template
 		int numPlayers = G.get().players.Count;
 		m_players = new GameObject[numPlayers];
-		m_playersSelectionDone = new bool[numPlayers];
+		m_playersSelectionDoneText = new Text[numPlayers];
 		m_playersCheckSpace = new bool[numPlayers];
 		m_playerScoresTexts = new List<Text>();
 		for (int i = 0; i < numPlayers; i++) {
@@ -50,11 +55,20 @@ public class GameController : MonoBehaviour {
 			m_players[i] = Instantiate(playerTemplate);
 			m_players[i].transform.parent = gridWorld.transform;
 			
+			Text playerOkText = Instantiate(okTextTemplate) as Text;
+			playerOkText.transform.SetParent(m_canvasGob.transform, false);
+			m_playersSelectionDoneText[i] = playerOkText;
+			playerOkText.gameObject.SetActive(false);
+			
 			Text playerScoreStatsText = Instantiate(playerScoreStatsTextTemplate) as Text;
 			playerScoreStatsText.transform.SetParent(m_scoreStatsPopup.transform, false);
 			m_playerScoresTexts.Add(playerScoreStatsText);
 			// TODO layout the texts
 		}
+		
+		// hide stuff
+		m_goText.gameObject.SetActive(false);
+		m_scoreStatsPopup.gameObject.SetActive(false);
 		
 		AnimMaster.delay ("gameStartDelay", this.gameObject, G.get ().GAME_RESET_DELAY).onComplete("onGameReset");
 	}
@@ -79,6 +93,7 @@ public class GameController : MonoBehaviour {
 	void onGameReset() {
 		Debug.Log ("onGameReset");
 		
+		m_goText.gameObject.SetActive(false);
 		m_scoreStatsPopup.gameObject.SetActive(false);
 		
 		if (m_grid != null) {
@@ -88,11 +103,15 @@ public class GameController : MonoBehaviour {
 		// Create grid
 		m_grid = new Grid(G.get ().GRID_W, G.get ().GRID_H);
 		
+		// The middle is actually 1 more grid away since the player graphic takes up 2 tiles.
+		Grid.Gid playerCenterGid = new Grid.Gid (1, 0);
 		// Initialize players
 		int numPlayers = m_players.Length;
 		for (int i = 0; i < numPlayers; i++) {
 			int startingX = (i + 1) * G.get ().GRID_W / (numPlayers + 1);
-			m_players[i].GetComponent<Player>().reset(this, i, new Grid.Gid(startingX, 0));
+			Grid.Gid playerStartGid = new Grid.Gid(startingX, 0);
+			m_players[i].GetComponent<Player>().reset(this, i, playerStartGid);
+			m_playersSelectionDoneText[i].transform.position = m_players[i].transform.TransformPoint(playerCenterGid.gridWorldPos);
 		}
 		onGameStart();
 	}
@@ -107,6 +126,7 @@ public class GameController : MonoBehaviour {
 		AnimMaster.clearWithKey("gameRoundStartDelay");
 		for (int i = 0; i < m_players.Length; i++) {
 			m_playersCheckSpace[i] = false;
+			m_playersSelectionDoneText[i].gameObject.SetActive(false);
 		}
 		
 		int numPlayersWithValidMoves = 0;
@@ -116,6 +136,7 @@ public class GameController : MonoBehaviour {
 			}
 		}
 		if (numPlayersWithValidMoves > 1) {
+			m_goText.gameObject.SetActive(true);
 			AnimMaster.delay ("gameRoundStartDelay", this.gameObject, G.get ().ROUND_START_DELAY).onComplete("onGameRoundStart");
 		} else {
 			AnimMaster.delay ("gameEndDelay", this.gameObject, G.get ().GAME_END_DELAY).onComplete("onGameEnd");
@@ -124,24 +145,25 @@ public class GameController : MonoBehaviour {
 	
 	void onGameRoundStart() {
 		Debug.Log ("onGameRoundStart");
+		m_goText.gameObject.SetActive(false);
 		AnimMaster.clearWithKey("roundCountDown");
 		AnimMaster.clearWithKey("gameRoundStartDelay");
 		m_countDownAnim = AnimMaster.delay("roundCountDown", this.gameObject, G.get ().COUNTDOWN_SECONDS).onComplete("onGameRoundEnd");
 		for (int i = 0; i < m_players.Length; i++) {
 			GameObject player = m_players[i];
 			// reset selection done bool
-			m_playersSelectionDone[i] = false;
+			m_playersSelectionDoneText[i].gameObject.SetActive(false);
 			player.SendMessage("onGameRoundStart");
 		}
 	}
 
 	public void onPlayerSelectionDone(int playerIndex) {
 		Debug.Log ("onPlayerSelectionDone " + playerIndex);
-		m_playersSelectionDone[playerIndex] = true;
+		m_playersSelectionDoneText[playerIndex].gameObject.SetActive(true);
 		
 		// if all players are done, proceed to round end.
-		foreach (bool done in m_playersSelectionDone) {
-			if (!done) {
+		foreach (Text done in m_playersSelectionDoneText) {
+			if (!done.IsActive()) {
 				return;
 			}
 		}
