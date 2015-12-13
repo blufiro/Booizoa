@@ -4,9 +4,12 @@ using System.Collections.Generic;
 
 public class Anim
 {
+	public delegate void CompleteDelegate();
+
 	private float m_timeElapsedSeconds = 0.0f;
 	private string m_onComplete = null;
 	private object m_onCompleteParams = null;
+	private CompleteDelegate m_onCompleteDelegate;
 	private float m_delaySeconds = 0.0f;
 	private GameObject m_target = null;
 	private string m_key = "";
@@ -24,6 +27,10 @@ public class Anim
 		this.m_onCompleteParams = onCompleteParams;
 		return this;
 	}
+	public Anim onCompleteDelegate(CompleteDelegate onComplete) {
+		this.m_onCompleteDelegate += onComplete;
+		return this;
+	}
 
 	/// <summary>
 	/// Elapse the animation time and play it. Do not call this manually.
@@ -33,6 +40,9 @@ public class Anim
 		if (isOver()) {
 			if (m_onComplete != null && m_target != null) {
 				m_target.SendMessage (m_onComplete, m_onCompleteParams, SendMessageOptions.RequireReceiver);
+			}
+			if (m_onCompleteDelegate != null) {
+				m_onCompleteDelegate();
 			}
 		}
 	}

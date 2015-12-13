@@ -12,7 +12,6 @@ public class ScoreStats : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		Debug.Log ("scores stats updating");
 		if (Input.GetKeyUp(KeyCode.Space)) {
 			gameController.onScoreStatsDone();
 		}

@@ -8,11 +8,14 @@ public class G
 	public int GRID_SIZE = 16;
 	public int GRID_STEP_MULT = 2;
 	public float GAME_START_DELAY = 0.5f;
-	public float GAME_END_DELAY = 0.5f;
+	public float GAME_END_DELAY = 0.2f;
 	public float GAME_RESET_DELAY = 0.5f;
 	public float ROUND_START_DELAY = 0.5f;
 	public float ROUND_END_DELAY = 0.5f;
 	public float COUNTDOWN_SECONDS = 3.0f;
+	public float PLAYER_END_ANIM_INIT_DELAY = 0.2f;
+	public float PLAYER_END_ANIM_DELAY = 0.1f;
+	public float PLAYER_END_ANIM_END_DELAY = 0.5f;
 	public int GRID_W { get { return SCREEN_W / GRID_SIZE; } }
 	public int GRID_H { get { return SCREEN_H / GRID_SIZE; } }
 	

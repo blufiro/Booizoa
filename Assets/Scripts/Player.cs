@@ -54,6 +54,9 @@ public class Player : MonoBehaviour {
 		m_playerHead.transform.localPosition = headGid.getGridWorldPosCenter(offsetCenter);
 		m_playerHead.transform.localRotation = Quaternion.identity;
 		m_chosenDir = Direction.UP;
+		
+		// reset head sprite. We shouldn't have any body parts now.
+		m_playerHead.GetComponent<SpriteRenderer>().sprite = m_gameController.playerNormalHeadSprite;
 				
 		// for now controls are set up here.
 		// TODO move this to be data driven.
@@ -109,6 +112,10 @@ public class Player : MonoBehaviour {
 		return hasFreeSpace;
 	}
 	
+	public int getPlayerIndex() {
+		return m_playerIndex;
+	}
+	
 	void chooseDirection(Direction dir) {
 		Debug.Log("player " + m_playerIndex + " chose direction " + dir);
 		Direction lastDirection = m_directions[m_directions.Count - 1];
@@ -148,7 +155,7 @@ public class Player : MonoBehaviour {
 		m_directions.Add(m_chosenDir);
 
 		// Add a new body part where the head is
-		GameObject nextBodyPart = getNextSprite(lastDirection, m_chosenDir, m_playerHead.transform.localPosition);
+		GameObject nextBodyPart = getNextBodyPart(lastDirection, m_chosenDir, m_playerHead.transform.localPosition);
 		addToGrid(m_chosenGid, nextBodyPart);
 		
 		// Move head
@@ -160,6 +167,20 @@ public class Player : MonoBehaviour {
 		m_playerHead.transform.localRotation = Quaternion.AngleAxis(getAngle(m_chosenDir), ROTATION_AXIS);
 		
 		m_acceptInput = false;
+	}
+	
+	void onGameWon() {
+		swapTextures(
+			m_gameController.playerWonHeadSprite,
+			m_gameController.playerWonUpSprite,
+			m_gameController.playerWonLeftRotationSprite);
+	}
+	
+	void onGameLost() {
+		swapTextures(
+			m_gameController.playerLostHeadSprite,
+			m_gameController.playerLostUpSprite,
+			m_gameController.playerLostLeftRotationSprite);
 	}
 	
 	void expand() {
@@ -188,20 +209,20 @@ public class Player : MonoBehaviour {
 		return false;
 	}
 	
-	private GameObject getNextSprite(Direction prevDir, Direction nextDir, Vector3 newPosition) {
-		GameObject nextSprite;
+	private GameObject getNextBodyPart(Direction prevDir, Direction nextDir, Vector3 newPosition) {
+		GameObject nextBodyPart;
 		switch (prevDir) {
 		case Direction.UP:
 			switch (nextDir) {
 			case Direction.UP:
-				nextSprite = Instantiate(m_gameController.playerUpTemplate);
+				nextBodyPart = Instantiate(m_gameController.playerUpTemplate);
 				break;
 			case Direction.LEFT:
-				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
+				nextBodyPart = Instantiate(m_gameController.playerLeftRotationTemplate);
 				break;
 			case Direction.RIGHT:
-				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
+				nextBodyPart = Instantiate(m_gameController.playerLeftRotationTemplate);
+				nextBodyPart.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
 				break;
 			default:
 				throw new UnityException("Illegal next dir " + nextDir + " from prev dir " + prevDir);
@@ -210,15 +231,15 @@ public class Player : MonoBehaviour {
 		case Direction.DOWN:
 			switch (nextDir) {
 			case Direction.DOWN:
-				nextSprite = Instantiate(m_gameController.playerUpTemplate);
+				nextBodyPart = Instantiate(m_gameController.playerUpTemplate);
 				break;
 			case Direction.LEFT:
-				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (ROTATION_AXIS, -90.0f, Space.Self);
+				nextBodyPart = Instantiate(m_gameController.playerLeftRotationTemplate);
+				nextBodyPart.transform.Rotate (ROTATION_AXIS, -90.0f, Space.Self);
 				break;
 			case Direction.RIGHT:
-				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (ROTATION_AXIS, 180.0f, Space.Self);
+				nextBodyPart = Instantiate(m_gameController.playerLeftRotationTemplate);
+				nextBodyPart.transform.Rotate (ROTATION_AXIS, 180.0f, Space.Self);
 				break;
 			default:
 				throw new UnityException("Illegal next dir " + nextDir + " from prev dir " + prevDir);
@@ -227,16 +248,16 @@ public class Player : MonoBehaviour {
 		case Direction.LEFT:
 			switch (nextDir) {
 			case Direction.UP:
-				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (ROTATION_AXIS, 180.0f, Space.Self);
+				nextBodyPart = Instantiate(m_gameController.playerLeftRotationTemplate);
+				nextBodyPart.transform.Rotate (ROTATION_AXIS, 180.0f, Space.Self);
 				break;
 			case Direction.DOWN:
-				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
+				nextBodyPart = Instantiate(m_gameController.playerLeftRotationTemplate);
+				nextBodyPart.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
 				break;
 			case Direction.LEFT:
-				nextSprite = Instantiate(m_gameController.playerUpTemplate);
-				nextSprite.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
+				nextBodyPart = Instantiate(m_gameController.playerUpTemplate);
+				nextBodyPart.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
 				break;
 			default:
 				throw new UnityException("Illegal next dir " + nextDir + " from prev dir " + prevDir);
@@ -245,15 +266,15 @@ public class Player : MonoBehaviour {
 		case Direction.RIGHT:
 			switch (nextDir) {
 			case Direction.UP:
-				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
-				nextSprite.transform.Rotate (ROTATION_AXIS, -90.0f, Space.Self);
+				nextBodyPart = Instantiate(m_gameController.playerLeftRotationTemplate);
+				nextBodyPart.transform.Rotate (ROTATION_AXIS, -90.0f, Space.Self);
 				break;
 			case Direction.DOWN:
-				nextSprite = Instantiate(m_gameController.playerLeftRotationTemplate);
+				nextBodyPart = Instantiate(m_gameController.playerLeftRotationTemplate);
 				break;
 			case Direction.RIGHT:
-				nextSprite = Instantiate(m_gameController.playerUpTemplate);
-				nextSprite.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
+				nextBodyPart = Instantiate(m_gameController.playerUpTemplate);
+				nextBodyPart.transform.Rotate (ROTATION_AXIS, 90.0f, Space.Self);
 				break;
 			default:
 				throw new UnityException("Illegal next dir " + nextDir + " from prev dir " + prevDir);
@@ -262,10 +283,10 @@ public class Player : MonoBehaviour {
 		default:
 			throw new UnityException("Unknown prev dir " + prevDir);
 		}
-		nextSprite.transform.parent = this.transform;
-		nextSprite.transform.localScale = m_playerHead.transform.localScale;
-		nextSprite.transform.localPosition = newPosition;
-		return nextSprite;
+		nextBodyPart.transform.parent = this.transform;
+		nextBodyPart.transform.localScale = m_playerHead.transform.localScale;
+		nextBodyPart.transform.localPosition = newPosition;
+		return nextBodyPart;
 	}
 	
 	Grid.Gid getNextGid(Direction dir) {
@@ -323,5 +344,31 @@ public class Player : MonoBehaviour {
 				m_gameController.Grid.add(gid, nextBodyPart);
 			}
 		}
+	}
+	
+	private void swapTextures(Sprite head, Sprite up, Sprite leftRotation) {
+		float delaySeconds = G.get ().PLAYER_END_ANIM_INIT_DELAY;
+		foreach (GameObject bodyPart in m_sprites) {
+			GameObject closurebodyPart = bodyPart;
+			Tile.BodyPartType bodyPartType = bodyPart.GetComponent<Tile>().bodyPartType;
+			switch (bodyPartType) {
+			case Tile.BodyPartType.BODYPART_UP:
+				AnimMaster.delay ("player"+m_playerIndex+"_SwapSpriteUp", this.gameObject, delaySeconds)
+					.onCompleteDelegate(() =>  { closurebodyPart.GetComponent<SpriteRenderer>().sprite = up; });
+				break;
+			case Tile.BodyPartType.BODYPART_ROTATE:
+				AnimMaster.delay ("player"+m_playerIndex+"_SwapSpriteRotation", this.gameObject, delaySeconds)
+					.onCompleteDelegate(() =>  { closurebodyPart.GetComponent<SpriteRenderer>().sprite = leftRotation; });
+				break;
+			default:
+				throw new UnityException("Unknown body part type : " + bodyPartType);
+			}
+			delaySeconds += G.get ().PLAYER_END_ANIM_DELAY;
+		}
+		AnimMaster.delay ("player"+m_playerIndex+"_SwapSpriteRotation", this.gameObject, delaySeconds)
+			.onCompleteDelegate(() =>  { m_playerHead.GetComponent<SpriteRenderer>().sprite = head; });
+		delaySeconds += G.get ().PLAYER_END_ANIM_END_DELAY;
+		AnimMaster.delay ("player"+m_playerIndex+"_SwapAnimDone", m_gameController.gameObject, delaySeconds)
+			.onComplete("onGameEndAnimDone").onCompleteParams(m_playerIndex);
 	}
 }

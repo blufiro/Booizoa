@@ -10,6 +10,13 @@ public class GameController : MonoBehaviour {
 	public GameObject playerTemplate;
 	public GameObject playerLeftRotationTemplate;
 	public GameObject playerUpTemplate;
+	public Sprite playerLostHeadSprite;
+	public Sprite playerLostLeftRotationSprite;
+	public Sprite playerLostUpSprite;
+	public Sprite playerWonHeadSprite;
+	public Sprite playerWonLeftRotationSprite;
+	public Sprite playerWonUpSprite;
+	public Sprite playerNormalHeadSprite;
 	public Text	playerScoreStatsTextTemplate;
 	public Text okTextTemplate;
 
@@ -21,6 +28,7 @@ public class GameController : MonoBehaviour {
 	private GameObject[] m_players;
 	private Text[] m_playersSelectionDoneText;
 	private bool[] m_playersCheckSpace;
+	private bool[] m_playersEndDone;
 	private Grid m_grid;
 	private Anim m_countDownAnim;
 	private GameObject m_canvasGob;
@@ -29,6 +37,7 @@ public class GameController : MonoBehaviour {
 	private Text m_debugText;
 	private Image m_scoreStatsPopup;
 	private List<Text> m_playerScoresTexts;
+	private List<int> m_winningPlayerIndices;
 	
 	// Use this for initialization
 	void Start () {
@@ -49,7 +58,9 @@ public class GameController : MonoBehaviour {
 		m_players = new GameObject[numPlayers];
 		m_playersSelectionDoneText = new Text[numPlayers];
 		m_playersCheckSpace = new bool[numPlayers];
+		m_playersEndDone = new bool[numPlayers];
 		m_playerScoresTexts = new List<Text>();
+		m_winningPlayerIndices = new List<int>();
 		for (int i = 0; i < numPlayers; i++) {
 			Debug.Log ("Creating Player " + i);
 			m_players[i] = Instantiate(playerTemplate);
@@ -112,6 +123,7 @@ public class GameController : MonoBehaviour {
 			Grid.Gid playerStartGid = new Grid.Gid(startingX, 0);
 			m_players[i].GetComponent<Player>().reset(this, i, playerStartGid);
 			m_playersSelectionDoneText[i].transform.position = m_players[i].transform.TransformPoint(playerCenterGid.gridWorldPos);
+			m_playersEndDone[i] = false;
 		}
 		onGameStart();
 	}
@@ -129,13 +141,14 @@ public class GameController : MonoBehaviour {
 			m_playersSelectionDoneText[i].gameObject.SetActive(false);
 		}
 		
-		int numPlayersWithValidMoves = 0;
+		m_winningPlayerIndices.Clear();
 		foreach(GameObject player in m_players) {
-			if (player.GetComponent<Player>().onHasValidMoves()) {
-				numPlayersWithValidMoves++;
+			Player playerComp = player.GetComponent<Player>(); 
+			if (playerComp.onHasValidMoves()) {
+				m_winningPlayerIndices.Add (playerComp.getPlayerIndex());
 			}
 		}
-		if (numPlayersWithValidMoves > 1) {
+		if (m_winningPlayerIndices.Count > 1) {
 			m_goText.gameObject.SetActive(true);
 			AnimMaster.delay ("gameRoundStartDelay", this.gameObject, G.get ().ROUND_START_DELAY).onComplete("onGameRoundStart");
 		} else {
@@ -184,6 +197,31 @@ public class GameController : MonoBehaviour {
 	}
 
 	void onGameEnd() {
+		Debug.Log ("onGameEnd");
+		bool allWon = (m_winningPlayerIndices.Count == 0);
+		Debug.Log ("onGameEnd allWon " + allWon);
+		for (int i = 0; i < m_players.Length; i++) {
+			if (allWon || m_winningPlayerIndices.Contains (i)) {
+				m_players[i].SendMessage ("onGameWon");
+			} else {
+				m_players[i].SendMessage ("onGameLost");
+			}
+		}
+	}
+	
+	void onGameEndAnimDone(int playerIndex) {
+		Debug.Log ("onGameEndAnimDone " + playerIndex);
+		m_playersEndDone[playerIndex] = true;
+		
+		// if all players are done, proceed to round end.
+		foreach (bool done in m_playersEndDone) {
+			if (!done) {
+				return;
+			}
+		}
+		onGameShowScores();
+	}
+	void onGameShowScores() {
 		m_scoreStatsPopup.gameObject.SetActive(true);
 	}
 	
