@@ -54,24 +54,39 @@ public class Grid
 			get { return m_y; }
 		}
 		
-		public Vector2 worldPos {
-			get
-			{
-				return new Vector2(
-					m_x * G.get ().GRID_SIZE,
-					m_y * G.get ().GRID_SIZE);
-			}
+		public Vector2 gridWorldPos {
+			get { return new Vector2(m_x, m_y); }
+		}
+		
+		public Vector2 gridWorldPosCenter {
+			get { return new Vector2(m_x + 0.5f, m_y + 0.5f); }
 		}
 
 		public Gid(int gridX, int gridY) {
 			this.m_x = gridX;
 			this.m_y = gridY;
 		}
-
-		public static Gid fromScreen(Vector2 position) {
-			return new Gid(
-				(int) (position.x / G.get ().GRID_SIZE),
-				(int) (position.y / G.get ().GRID_SIZE));
+		
+		public void sub(Gid otherGid) {
+			this.m_x -= otherGid.x;
+			this.m_y -= otherGid.y;
 		}
+
+		public void plus (int x, int y)
+		{
+			this.m_x += x;
+			this.m_y += y;
+		}
+		
+		public static Gid clone(Gid gid)
+		{
+			return new Gid(gid.x, gid.y);
+		}
+
+//		public static Gid fromScreen(Vector2 position) {
+//			return new Gid(
+//				(int) (position.x / G.get ().GRID_SIZE),
+//				(int) (position.y / G.get ().GRID_SIZE));
+//		}
 	}
 }

@@ -5,7 +5,10 @@ using System.Collections;
 public class GameController : MonoBehaviour {
 	
 	public GameObject world;
+	public GameObject gridWorld;
 	public GameObject playerTemplate;
+	public GameObject playerLeftRotationTemplate;
+	public GameObject playerUpTemplate;
 
 	public Grid Grid
 	{
@@ -31,7 +34,7 @@ public class GameController : MonoBehaviour {
 		for (int i = 0; i < numPlayers; i++) {
 			Debug.Log ("Creating Player " + i);
 			m_players[i] = Instantiate(playerTemplate);
-			m_players[i].transform.parent = world.transform;
+			m_players[i].transform.parent = gridWorld.transform;
 		}
 		
 		timeLeftText = GameObject.Find ("Time Left Text").GetComponent<Text>();
