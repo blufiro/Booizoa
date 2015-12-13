@@ -31,6 +31,16 @@ public class Grid
 		return m_gridObjects[gid.x, gid.y];
 	}
 	
+	public GidStatus getStatus(Gid gid) {
+		if (outOfBounds(gid)) {
+			return GidStatus.OUT_OF_BOUNDS;
+		} else if (exists (gid)) {
+			return GidStatus.OCCUPIED;
+		} else {
+			return GidStatus.FREE;
+		}
+	}
+
 	public bool exists(Gid gid) {
 		return (m_gridObjects[gid.x, gid.y] != null);
 	}
@@ -42,7 +52,14 @@ public class Grid
 			|| gid.y >= m_height);
 	}
 	
+	public enum GidStatus {
+		OUT_OF_BOUNDS,
+		OCCUPIED,
+		FREE
+	}
+	
 	public class Gid {
+		
 		private int m_x;
 		private int m_y;
 		

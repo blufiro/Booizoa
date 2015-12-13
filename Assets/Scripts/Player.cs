@@ -6,6 +6,7 @@ public class Player : MonoBehaviour {
 
 	private static Vector3 ROTATION_AXIS = new Vector3(0,0,1);
 
+	public bool acceptInput { get { return m_acceptInput; }}
 	private bool m_acceptInput;
 	private int m_playerIndex;
 	private Dictionary<Direction, KeyCode> m_controls;
@@ -17,17 +18,18 @@ public class Player : MonoBehaviour {
 	private Grid.Gid m_chosenGid;
 
 	// Called before Start() immediately after Player is created.
-	public void init(GameController gameController, int playerIndex, Grid.Gid startGid) {
+	public void reset(GameController gameController, int playerIndex, Grid.Gid startGid) {
 		this.m_gameController = gameController;
 		this.m_acceptInput = false;
 		this.m_playerIndex = playerIndex;
+		
 		this.m_gidHistory = new List<Grid.Gid>();
 		this.m_directions = new List<Direction>();
 
 		this.m_gidHistory.Add(startGid);
 		this.m_directions.Add(Direction.UP);
 		m_gameController.Grid.add(startGid, this.gameObject);
-		Debug.Log("player start " + startGid.x + "," + startGid.y);
+		Debug.Log("player " + m_playerIndex + " start " + startGid.x + "," + startGid.y);
 		this.transform.localPosition = startGid.gridWorldPos;
 		this.transform.localScale = new Vector2(1, 1);
 		
@@ -74,10 +76,21 @@ public class Player : MonoBehaviour {
 	}
 	
 	void onGameRoundStart() {
-		Debug.Log ("player onGameRoundStart");
+		Debug.Log ("player " + m_playerIndex + " onGameRoundStart");
 		m_acceptInput = true;
 		// Default the chosen gid, player may overwrite but if there was no input, they would execute this.
 		m_chosenGid = getNextGid(m_directions[m_directions.Count - 1]);
+	}
+	
+	public bool onHasValidMoves() {
+		bool hasFreeSpace = false;
+		foreach (Direction dir in Direction.GetValues(typeof(Direction))) {
+			if (m_gameController.Grid.getStatus(getNextGid(dir)) == Grid.GidStatus.FREE) {
+				hasFreeSpace = true;
+				break;
+			}
+		}
+		return hasFreeSpace;
 	}
 	
 	void chooseDirection(Direction dir) {
@@ -91,12 +104,12 @@ public class Player : MonoBehaviour {
 		
 		Grid.Gid nextGid = getNextGid(dir);
 		
-		if (m_gameController.Grid.outOfBounds(nextGid)) {
+		switch (m_gameController.Grid.getStatus(nextGid)) {
+		case Grid.GidStatus.OUT_OF_BOUNDS:
 			Debug.Log("player " + m_playerIndex + " tried to move out of bounds " + nextGid + " " + dir);
 			// invalid move to the walls.
 			return;
-		}
-		if (m_gameController.Grid.exists (nextGid)) {
+		case Grid.GidStatus.OCCUPIED:
 			Debug.Log ("player " + m_playerIndex + " tried to move into another occupied cell.");
 			// invalid move into occupied cells
 			return;
@@ -111,6 +124,10 @@ public class Player : MonoBehaviour {
 	
 	// Chosen direction is always set, so the player will always execute the previous move even if there was no input.
 	void onExecuteChosenDirection() {
+		if (m_gameController.Grid.getStatus(getNextGid(m_chosenDir)) != Grid.GidStatus.FREE) {
+			Debug.Log ("Not executing chosen direction " + m_chosenDir + " on player " + m_playerIndex);
+			return;
+		}
 		Direction lastDirection = m_directions[m_directions.Count - 1];
 		m_directions.Add(m_chosenDir);
 
@@ -125,6 +142,8 @@ public class Player : MonoBehaviour {
 		int offsetForCenter = nextBodyPart.GetComponent<Tile>().tileSize / 2;
 		m_playerHead.transform.localPosition = headGid.getGridWorldPosCenter(offsetForCenter);
 		m_playerHead.transform.localRotation = Quaternion.AngleAxis(getAngle(m_chosenDir), ROTATION_AXIS);
+		
+		m_acceptInput = false;
 	}
 	
 	void expand() {

@@ -7,7 +7,12 @@ public class G
 	public int SCREEN_H = 360;
 	public int GRID_SIZE = 16;
 	public int GRID_STEP_MULT = 2;
-	public float COUNTDOWN_SECONDS = 3;
+	public float GAME_START_DELAY = 0.5f;
+	public float GAME_END_DELAY = 0.5f;
+	public float GAME_RESET_DELAY = 0.5f;
+	public float ROUND_START_DELAY = 0.5f;
+	public float ROUND_END_DELAY = 0.5f;
+	public float COUNTDOWN_SECONDS = 1.0f;
 	public int GRID_W { get { return SCREEN_W / GRID_SIZE; } }
 	public int GRID_H { get { return SCREEN_H / GRID_SIZE; } }
 	

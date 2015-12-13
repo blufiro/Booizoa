@@ -32,7 +32,6 @@ public class Anim
 		m_timeElapsedSeconds += elapsedSeconds;
 		if (isOver()) {
 			if (m_onComplete != null && m_target != null) {
-				Debug.Log("complete" + m_onCompleteParams);
 				m_target.SendMessage (m_onComplete, m_onCompleteParams, SendMessageOptions.RequireReceiver);
 			}
 		}
