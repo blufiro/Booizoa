@@ -12,52 +12,68 @@ public class Player : MonoBehaviour {
 	private Dictionary<Direction, KeyCode> m_controls;
 	private List<Grid.Gid> m_gidHistory; // may not contain all the gids the player takes up since the sprites take up 2x2 spaces.
 	private List<Direction> m_directions;
+	private List<GameObject> m_sprites;
 	private GameController m_gameController;
 	private GameObject m_playerHead;
-	private Direction m_chosenDir = Direction.UP;
+	private Direction m_chosenDir;
 	private Grid.Gid m_chosenGid;
 
-	// Called before Start() immediately after Player is created.
+	// Use this for initialization
+	void Start () {
+		m_playerHead = this.transform.FindChild("Player Sprite Head").gameObject;
+	}
+	
+	// Must be called after Start() so we have a reference to child objects.
 	public void reset(GameController gameController, int playerIndex, Grid.Gid startGid) {
 		this.m_gameController = gameController;
 		this.m_acceptInput = false;
 		this.m_playerIndex = playerIndex;
 		
+		if (m_sprites != null) {
+			foreach (GameObject sprite in m_sprites) {
+				Destroy(sprite);
+			}
+		}
+		
 		this.m_gidHistory = new List<Grid.Gid>();
 		this.m_directions = new List<Direction>();
-
+		this.m_sprites = new List<GameObject>();
+		
 		this.m_gidHistory.Add(startGid);
 		this.m_directions.Add(Direction.UP);
 		m_gameController.Grid.add(startGid, this.gameObject);
+		// Don't add this.gameObject to m_sprites as we don't want this to destroy itself.
 		Debug.Log("player " + m_playerIndex + " start " + startGid.x + "," + startGid.y);
 		this.transform.localPosition = startGid.gridWorldPos;
 		this.transform.localScale = new Vector2(1, 1);
 		
-		
+		// reset the head position
+		int headSize = m_playerHead.GetComponent<Tile>().tileSize;
+		Grid.Gid headGid = new Grid.Gid(0,0);
+		int offsetCenter = headSize / 2;
+		m_playerHead.transform.localPosition = headGid.getGridWorldPosCenter(offsetCenter);
+		m_playerHead.transform.localRotation = Quaternion.identity;
+		m_chosenDir = Direction.UP;
+				
 		// for now controls are set up here.
 		// TODO move this to be data driven.
 		m_controls = new Dictionary<Direction, KeyCode>();
 		switch (playerIndex) {
-			case 0:
-				m_controls.Add(Direction.UP, KeyCode.W);
-				m_controls.Add(Direction.LEFT, KeyCode.A);
-				m_controls.Add (Direction.DOWN, KeyCode.S);
-				m_controls.Add (Direction.RIGHT, KeyCode.D);
-				break;
-			case 1:
-				m_controls.Add(Direction.UP, KeyCode.I);
-				m_controls.Add(Direction.LEFT, KeyCode.J);
-				m_controls.Add (Direction.DOWN, KeyCode.K);
-				m_controls.Add (Direction.RIGHT, KeyCode.L);
-				break;
-			default: 
-				throw new UnityException("player index controls not supported " + playerIndex);
+		case 0:
+			m_controls.Add(Direction.UP, KeyCode.W);
+			m_controls.Add(Direction.LEFT, KeyCode.A);
+			m_controls.Add (Direction.DOWN, KeyCode.S);
+			m_controls.Add (Direction.RIGHT, KeyCode.D);
+			break;
+		case 1:
+			m_controls.Add(Direction.UP, KeyCode.I);
+			m_controls.Add(Direction.LEFT, KeyCode.J);
+			m_controls.Add (Direction.DOWN, KeyCode.K);
+			m_controls.Add (Direction.RIGHT, KeyCode.L);
+			break;
+		default: 
+			throw new UnityException("player index controls not supported " + playerIndex);
 		}
-	}
-
-	// Use this for initialization
-	void Start () {
-		m_playerHead = this.transform.FindChild("Player Sprite Head").gameObject;
 	}
 	
 	// Update is called once per frame
@@ -296,6 +312,7 @@ public class Player : MonoBehaviour {
 	private void addToGrid (Grid.Gid nextGid, GameObject nextBodyPart)
 	{
 		m_gidHistory.Add(nextGid);
+		m_sprites.Add(nextBodyPart);
 		
 		// each sprite can spread over a few grid cells
 		int tileSize = nextBodyPart.GetComponent<Tile>().tileSize;

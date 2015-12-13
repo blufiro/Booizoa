@@ -56,7 +56,7 @@ public class GameController : MonoBehaviour {
 			// TODO layout the texts
 		}
 		
-		onGameReset();
+		AnimMaster.delay ("gameStartDelay", this.gameObject, G.get ().GAME_RESET_DELAY).onComplete("onGameReset");
 	}
 	
 	// Update is called once per frame
@@ -94,8 +94,7 @@ public class GameController : MonoBehaviour {
 			int startingX = (i + 1) * G.get ().GRID_W / (numPlayers + 1);
 			m_players[i].GetComponent<Player>().reset(this, i, new Grid.Gid(startingX, 0));
 		}
-		
-		AnimMaster.delay ("gameStartDelay", this.gameObject, G.get ().GAME_START_DELAY).onComplete("onGameStart");
+		onGameStart();
 	}
 	
 	void onGameStart() {

@@ -2,6 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Class to store all the game objects in the game grid.
+/// The grid does not take ownership of the objects stored in it. Clean them up yourself.
 /// </summary>
 public class Grid
 {
@@ -16,8 +17,16 @@ public class Grid
 		m_width = w;
 		m_height = h;
 		m_gridObjects = new GameObject[w, h];
-		for (int x = 0; x < w; x++) {
-			for (int y = 0; y < h; y++) {
+		for (int x = 0; x < m_width; x++) {
+			for (int y = 0; y < m_height; y++) {
+				m_gridObjects[x, y] = null;
+			}
+		}
+	}
+	
+	public void clear() {
+		for (int x = 0; x < m_width; x++) {
+			for (int y = 0; y < m_height; y++) {
 				m_gridObjects[x, y] = null;
 			}
 		}
