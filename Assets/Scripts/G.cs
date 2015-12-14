@@ -14,7 +14,7 @@ public class G
 	public float ROUND_END_DELAY = 0.5f;
 	public float COUNTDOWN_SECONDS = 3.0f;
 	public float PLAYER_END_ANIM_INIT_DELAY = 0.2f;
-	public float PLAYER_END_ANIM_DELAY = 0.1f;
+	public float PLAYER_END_ANIM_DELAY = 0.05f;
 	public float PLAYER_END_ANIM_END_DELAY = 0.5f;
 	public int GRID_W { get { return SCREEN_W / GRID_SIZE; } }
 	public int GRID_H { get { return SCREEN_H / GRID_SIZE; } }

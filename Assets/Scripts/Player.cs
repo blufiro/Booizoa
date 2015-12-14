@@ -39,10 +39,8 @@ public class Player : MonoBehaviour {
 		this.m_directions = new List<Direction>();
 		this.m_sprites = new List<GameObject>();
 		
-		this.m_gidHistory.Add(startGid);
 		this.m_directions.Add(Direction.UP);
-		m_gameController.Grid.add(startGid, this.gameObject);
-		// Don't add this.gameObject to m_sprites as we don't want this to destroy itself.
+		addToGrid (startGid, m_playerHead, false /* Don't add this.gameObject to m_sprites as we don't want this to destroy itself. */);
 		Debug.Log("player " + m_playerIndex + " start " + startGid.x + "," + startGid.y);
 		this.transform.localPosition = startGid.gridWorldPos;
 		this.transform.localScale = new Vector2(1, 1);
@@ -126,16 +124,18 @@ public class Player : MonoBehaviour {
 		}
 		
 		Grid.Gid nextGid = getNextGid(dir);
-		
-		switch (m_gameController.Grid.getStatus(nextGid)) {
-		case Grid.GidStatus.OUT_OF_BOUNDS:
-			Debug.Log("player " + m_playerIndex + " tried to move out of bounds " + nextGid + " " + dir);
-			// invalid move to the walls.
-			return;
-		case Grid.GidStatus.OCCUPIED:
-			Debug.Log ("player " + m_playerIndex + " tried to move into another occupied cell.");
-			// invalid move into occupied cells
-			return;
+		Grid.Gid[] gids = getGidsForTile(nextGid, m_playerHead.GetComponent<Tile>());
+		foreach (Grid.Gid gid in gids) {
+			switch (m_gameController.Grid.getStatus(gid)) {
+			case Grid.GidStatus.OUT_OF_BOUNDS:
+				Debug.Log("player " + m_playerIndex + " tried to move out of bounds " + gid + " " + dir);
+				// invalid move to the walls.
+				return;
+			case Grid.GidStatus.OCCUPIED:
+				Debug.Log ("player " + m_playerIndex + " tried to move into another occupied cell.");
+				// invalid move into occupied cells
+				return;
+			}
 		}
 		
 		m_chosenDir = dir;
@@ -147,16 +147,20 @@ public class Player : MonoBehaviour {
 	
 	// Chosen direction is always set, so the player will always execute the previous move even if there was no input.
 	void onExecuteChosenDirection() {
-		if (m_gameController.Grid.getStatus(getNextGid(m_chosenDir)) != Grid.GidStatus.FREE) {
-			Debug.Log ("Not executing chosen direction " + m_chosenDir + " on player " + m_playerIndex);
-			return;
+		Grid.Gid nextGid = getNextGid(m_chosenDir);
+		Grid.Gid[] gids = getGidsForTile(nextGid, m_playerHead.GetComponent<Tile>());
+		foreach (Grid.Gid gid in gids) {
+			if (m_gameController.Grid.getStatus(gid) != Grid.GidStatus.FREE) {
+				Debug.Log ("Not executing chosen direction " + m_chosenDir + " on player " + m_playerIndex);
+				return;
+			}
 		}
 		Direction lastDirection = m_directions[m_directions.Count - 1];
 		m_directions.Add(m_chosenDir);
 
 		// Add a new body part where the head is
 		GameObject nextBodyPart = getNextBodyPart(lastDirection, m_chosenDir, m_playerHead.transform.localPosition);
-		addToGrid(m_chosenGid, nextBodyPart);
+		addToGrid(m_chosenGid, nextBodyPart, true);
 		
 		// Move head
 		Grid.Gid headGid = Grid.Gid.clone(m_chosenGid);
@@ -330,20 +334,32 @@ public class Player : MonoBehaviour {
 		}
 	}
 
-	private void addToGrid (Grid.Gid nextGid, GameObject nextBodyPart)
+	private void addToGrid (Grid.Gid nextGid, GameObject nextBodyPart, bool isBody)
 	{
 		m_gidHistory.Add(nextGid);
-		m_sprites.Add(nextBodyPart);
+		if (isBody) {
+			m_sprites.Add(nextBodyPart);
+		}
 		
 		// each sprite can spread over a few grid cells
-		int tileSize = nextBodyPart.GetComponent<Tile>().tileSize;
+		Grid.Gid[] gids = getGidsForTile(nextGid, nextBodyPart.GetComponent<Tile>());
+		foreach  (Grid.Gid gid in gids) {
+			m_gameController.Grid.add(gid, nextBodyPart);
+		}
+	}
+	
+	private Grid.Gid[] getGidsForTile(Grid.Gid firstGid, Tile tile) {
+		int tileSize = tile.tileSize;
+		Grid.Gid[] gids = new Grid.Gid[tileSize * tileSize];
+		int gidIndex = 0;
 		for (int x = 0; x < tileSize; x++) {
 			for (int y = 0; y < tileSize; y++) {
-				Grid.Gid gid = Grid.Gid.clone (nextGid);
+				Grid.Gid gid = Grid.Gid.clone (firstGid);
 				gid.plus(x, y);
-				m_gameController.Grid.add(gid, nextBodyPart);
+				gids[gidIndex++] = gid;
 			}
 		}
+		return gids;
 	}
 	
 	private void swapTextures(Sprite head, Sprite up, Sprite leftRotation) {
