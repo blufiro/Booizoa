@@ -82,11 +82,6 @@ public class GameController : MonoBehaviour {
 		m_scoreStatsPopup.gameObject.SetActive(false);
 		
 		AnimMaster.delay ("gameStartDelay", this.gameObject, G.get ().GAME_RESET_DELAY).onComplete("onGameReset");
-		
-		// debug grid
-		DebugGrid debugGrid = this.gameObject.GetComponent<DebugGrid>();
-		debugGrid.width = G.get ().GRID_SIZE * world.transform.localScale.x;
-		debugGrid.height = G.get ().GRID_SIZE * world.transform.localScale.y;
 	}
 	
 	// Update is called once per frame
