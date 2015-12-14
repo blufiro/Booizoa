@@ -73,8 +73,12 @@ public class GameController : MonoBehaviour {
 			
 			Text playerScoreStatsText = Instantiate(playerScoreStatsTextTemplate) as Text;
 			playerScoreStatsText.transform.SetParent(m_scoreStatsPopup.transform, false);
+			playerScoreStatsText.text = "Player " + i;
+			playerScoreStatsText.rectTransform.sizeDelta = new Vector2(m_scoreStatsPopup.rectTransform.rect.width / numPlayers, playerScoreStatsText.rectTransform.rect.height);
+			playerScoreStatsText.transform.localPosition = new Vector2(
+				(m_scoreStatsPopup.rectTransform.rect.width * i / numPlayers) + m_scoreStatsPopup.rectTransform.rect.x,
+				playerScoreStatsText.transform.localPosition.y);
 			m_playerScoresTexts.Add(playerScoreStatsText);
-			// TODO layout the texts
 		}
 		
 		// hide stuff
@@ -230,6 +234,13 @@ public class GameController : MonoBehaviour {
 		onGameShowScores();
 	}
 	void onGameShowScores() {
+		for (int i = 0; i < m_players.Length; i++) {
+			Player playerComp = m_players[i].GetComponent<Player>();
+			m_playerScoresTexts[i].text =
+				"Player " + playerComp.getPlayerIndex() 
+				+ "\n\n\n"
+				+ "\nSteps: " + playerComp.getNumSteps();
+		}
 		m_scoreStatsPopup.gameObject.SetActive(true);
 	}
 	

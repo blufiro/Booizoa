@@ -10,6 +10,7 @@ public class Player : MonoBehaviour {
 	private bool m_acceptInput;
 	private bool m_isDead;
 	private int m_playerIndex;
+	private int m_numSteps;
 	private Dictionary<Direction, KeyCode> m_controls;
 	private List<Grid.Gid> m_gidHistory; // may not contain all the gids the player takes up since the sprites take up 2x2 spaces.
 	private List<Direction> m_directions;
@@ -30,6 +31,7 @@ public class Player : MonoBehaviour {
 		this.m_acceptInput = false;
 		this.m_isDead = false;
 		this.m_playerIndex = playerIndex;
+		this.m_numSteps = 0;
 		
 		if (m_sprites != null) {
 			foreach (GameObject sprite in m_sprites) {
@@ -122,6 +124,10 @@ public class Player : MonoBehaviour {
 		return m_isDead;
 	}
 	
+	public int getNumSteps() {
+		return m_numSteps;
+	}
+	
 	void chooseDirection(Direction dir) {
 		Debug.Log("player " + m_playerIndex + " chose direction " + dir);
 		Direction lastDirection = m_directions[m_directions.Count - 1];
@@ -182,6 +188,7 @@ public class Player : MonoBehaviour {
 		m_playerHead.transform.localPosition = headGid.getGridWorldPosCenter(offsetForCenter);
 		m_playerHead.transform.localRotation = Quaternion.AngleAxis(getAngle(m_chosenDir), ROTATION_AXIS);
 		
+		m_numSteps++;
 		m_acceptInput = false;
 	}
 	
