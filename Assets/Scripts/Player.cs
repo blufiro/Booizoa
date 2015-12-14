@@ -8,6 +8,7 @@ public class Player : MonoBehaviour {
 
 	public bool acceptInput { get { return m_acceptInput; }}
 	private bool m_acceptInput;
+	private bool m_isDead;
 	private int m_playerIndex;
 	private Dictionary<Direction, KeyCode> m_controls;
 	private List<Grid.Gid> m_gidHistory; // may not contain all the gids the player takes up since the sprites take up 2x2 spaces.
@@ -27,6 +28,7 @@ public class Player : MonoBehaviour {
 	public void reset(GameController gameController, int playerIndex, Grid.Gid startGid) {
 		this.m_gameController = gameController;
 		this.m_acceptInput = false;
+		this.m_isDead = false;
 		this.m_playerIndex = playerIndex;
 		
 		if (m_sprites != null) {
@@ -79,7 +81,7 @@ public class Player : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (m_acceptInput) {
+		if (m_acceptInput && !m_isDead) {
 			if (Input.GetKeyUp(m_controls[Direction.UP])) {
 				chooseDirection(Direction.UP);
 			} else if (Input.GetKeyUp(m_controls[Direction.DOWN])) {
@@ -100,6 +102,8 @@ public class Player : MonoBehaviour {
 	}
 	
 	public bool onHasValidMoves() {
+		if (m_isDead)
+			return false;
 		bool hasFreeSpace = false;
 		foreach (Direction dir in Direction.GetValues(typeof(Direction))) {
 			if (m_gameController.Grid.getStatus(getNextGid(dir)) == Grid.GidStatus.FREE) {
@@ -112,6 +116,10 @@ public class Player : MonoBehaviour {
 	
 	public int getPlayerIndex() {
 		return m_playerIndex;
+	}
+	
+	public bool getIsDead() {
+		return m_isDead;
 	}
 	
 	void chooseDirection(Direction dir) {
@@ -147,11 +155,15 @@ public class Player : MonoBehaviour {
 	
 	// Chosen direction is always set, so the player will always execute the previous move even if there was no input.
 	void onExecuteChosenDirection() {
+		if (m_isDead) {
+			return;
+		}
 		Grid.Gid nextGid = getNextGid(m_chosenDir);
 		Grid.Gid[] gids = getGidsForTile(nextGid, m_playerHead.GetComponent<Tile>());
 		foreach (Grid.Gid gid in gids) {
 			if (m_gameController.Grid.getStatus(gid) != Grid.GidStatus.FREE) {
 				Debug.Log ("Not executing chosen direction " + m_chosenDir + " on player " + m_playerIndex);
+				onGameLost ();
 				return;
 			}
 		}
@@ -174,6 +186,9 @@ public class Player : MonoBehaviour {
 	}
 	
 	void onGameWon() {
+		if (m_isDead) {
+			return;
+		}
 		swapTextures(
 			m_gameController.playerWonHeadSprite,
 			m_gameController.playerWonUpSprite,
@@ -181,14 +196,14 @@ public class Player : MonoBehaviour {
 	}
 	
 	void onGameLost() {
+		if (m_isDead) {
+			return;
+		}
+		m_isDead = true;
 		swapTextures(
 			m_gameController.playerLostHeadSprite,
 			m_gameController.playerLostUpSprite,
 			m_gameController.playerLostLeftRotationSprite);
-	}
-	
-	void expand() {
-		
 	}
 	
 	private bool isOpposite(Direction prevDir, Direction nextDir) {

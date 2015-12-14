@@ -119,7 +119,7 @@ public class GameController : MonoBehaviour {
 		// Initialize players
 		int numPlayers = m_players.Length;
 		for (int i = 0; i < numPlayers; i++) {
-			int startingX = (i + 1) * G.get ().GRID_W / (numPlayers + 1);
+			int startingX = ((i + 1) * G.get ().GRID_W / (numPlayers + 1)) / 2 * 2;
 			Grid.Gid playerStartGid = new Grid.Gid(startingX, 0);
 			m_players[i].GetComponent<Player>().reset(this, i, playerStartGid);
 			m_playersSelectionDoneText[i].transform.position = m_players[i].transform.TransformPoint(playerCenterGid.gridWorldPos);
@@ -152,6 +152,16 @@ public class GameController : MonoBehaviour {
 			m_goText.gameObject.SetActive(true);
 			AnimMaster.delay ("gameRoundStartDelay", this.gameObject, G.get ().ROUND_START_DELAY).onComplete("onGameRoundStart");
 		} else {
+			// There might be 0 or 1 winning players at this point.
+			// If there are no players with valid moves, there can be a tie with multiple players whichever are still alive.
+			if (m_winningPlayerIndices.Count == 0) {
+				foreach(GameObject player in m_players) {
+					Player playerComp = player.GetComponent<Player>(); 
+					if (!playerComp.getIsDead()) {
+						m_winningPlayerIndices.Add (playerComp.getPlayerIndex());
+					}
+				}
+			}
 			AnimMaster.delay ("gameEndDelay", this.gameObject, G.get ().GAME_END_DELAY).onComplete("onGameEnd");
 		}
 	}
@@ -198,10 +208,8 @@ public class GameController : MonoBehaviour {
 
 	void onGameEnd() {
 		Debug.Log ("onGameEnd");
-		bool allWon = (m_winningPlayerIndices.Count == 0);
-		Debug.Log ("onGameEnd allWon " + allWon);
 		for (int i = 0; i < m_players.Length; i++) {
-			if (allWon || m_winningPlayerIndices.Contains (i)) {
+			if (m_winningPlayerIndices.Contains (i)) {
 				m_players[i].SendMessage ("onGameWon");
 			} else {
 				m_players[i].SendMessage ("onGameLost");
