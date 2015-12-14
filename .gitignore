@@ -62,3 +62,5 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+Builds/Exe/*/Booizoa_Data/*
+Builds/Exe/*/Booizoa.exe

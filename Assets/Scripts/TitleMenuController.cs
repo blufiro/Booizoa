@@ -16,26 +16,47 @@ public class TitleMenuController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (Input.GetKeyUp(KeyCode.F)) {
-			onAddPlayer(0);
+		for (int playerIndex = 0; playerIndex < G.get ().MAX_PLAYERS; playerIndex++) {
+			if (Input.GetButton("Select" + playerIndex)) {
+				onAddPlayer(playerIndex);
+			}
+			if (Input.GetButton("Cancel" + playerIndex)) {
+				onRemovePlayer(playerIndex);
+			}
 		}
-		if (Input.GetKeyUp(KeyCode.J)) {
-			onAddPlayer(1);
-		}
-		if (Input.GetKeyUp(KeyCode.Space)) {
+		if (Input.GetButton("Start")) {
 			if (playerIndices.Count > 1) {
 				Debug.Log ("Load game");
 				G.get ().players = playerIndices;
 				Application.LoadLevel ("game_scene");
 			}
 		}
+		if (Input.GetButton("Back")) {
+			Application.Quit();
+		}
 	}
 	
 	void onAddPlayer(int index) {
 		if (!playerIndices.Contains(index)) {
 			playerIndices.Add(index);
-			playersJoinedText.text += "\nPlayer " + index;
 			Debug.Log ("Add player " + index);
+			updateJoinedText();
 		}
+	}
+	
+	void onRemovePlayer(int index) {
+		if (playerIndices.Contains(index)) {
+			playerIndices.Remove(index);
+			Debug.Log ("Remove player " + index);
+			updateJoinedText();
+		}
+	}
+	
+	void updateJoinedText() {
+		string text = "Join now!";
+		foreach (int playerIndex in playerIndices) {
+			text += "\nPlayer " + playerIndex + " joined!";
+		}
+		playersJoinedText.text = text;
 	}
 }

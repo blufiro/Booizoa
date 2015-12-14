@@ -12,8 +12,10 @@ public class ScoreStats : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (Input.GetKeyUp(KeyCode.Space)) {
-			gameController.onScoreStatsDone();
+		foreach (int i in G.get().players) {
+			if (Input.GetButton("Select" + i)) {
+				gameController.onScoreStatsDone();
+			}
 		}
 	}
 }

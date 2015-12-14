@@ -11,7 +11,6 @@ public class Player : MonoBehaviour {
 	private bool m_isDead;
 	private int m_playerIndex;
 	private int m_numSteps;
-	private Dictionary<Direction, KeyCode> m_controls;
 	private List<Grid.Gid> m_gidHistory; // may not contain all the gids the player takes up since the sprites take up 2x2 spaces.
 	private List<Direction> m_directions;
 	private List<GameObject> m_sprites;
@@ -59,38 +58,22 @@ public class Player : MonoBehaviour {
 		
 		// reset head sprite. We shouldn't have any body parts now.
 		m_playerHead.GetComponent<SpriteRenderer>().sprite = m_gameController.playerNormalHeadSprite;
-				
-		// for now controls are set up here.
-		// TODO move this to be data driven.
-		m_controls = new Dictionary<Direction, KeyCode>();
-		switch (playerIndex) {
-		case 0:
-			m_controls.Add(Direction.UP, KeyCode.W);
-			m_controls.Add(Direction.LEFT, KeyCode.A);
-			m_controls.Add (Direction.DOWN, KeyCode.S);
-			m_controls.Add (Direction.RIGHT, KeyCode.D);
-			break;
-		case 1:
-			m_controls.Add(Direction.UP, KeyCode.I);
-			m_controls.Add(Direction.LEFT, KeyCode.J);
-			m_controls.Add (Direction.DOWN, KeyCode.K);
-			m_controls.Add (Direction.RIGHT, KeyCode.L);
-			break;
-		default: 
-			throw new UnityException("player index controls not supported " + playerIndex);
-		}
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		if (m_acceptInput && !m_isDead) {
-			if (Input.GetKeyUp(m_controls[Direction.UP])) {
+			if (Input.GetAxis ("VerticalAxis" + m_playerIndex) < -G.get ().AXIS_THRESHOLD
+			    || Input.GetButton ("UpButton" + m_playerIndex)) {
 				chooseDirection(Direction.UP);
-			} else if (Input.GetKeyUp(m_controls[Direction.DOWN])) {
+			} else if (Input.GetAxis ("VerticalAxis" + m_playerIndex) > G.get ().AXIS_THRESHOLD
+			    || Input.GetButton ("DownButton" + m_playerIndex)) {
 				chooseDirection(Direction.DOWN);
-			} else if (Input.GetKeyUp(m_controls[Direction.LEFT])) {
+			} else if (Input.GetAxis ("HorizontalAxis" + m_playerIndex) < -G.get ().AXIS_THRESHOLD
+				|| Input.GetButton ("LeftButton" + m_playerIndex)) {
 				chooseDirection(Direction.LEFT);
-			} else if (Input.GetKeyUp(m_controls[Direction.RIGHT])) {
+			} else if (Input.GetAxis ("HorizontalAxis" + m_playerIndex) > G.get ().AXIS_THRESHOLD
+			    || Input.GetButton ("RightButton" + m_playerIndex)) {
 				chooseDirection(Direction.RIGHT);
 			}
 		}

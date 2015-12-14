@@ -96,13 +96,15 @@ public class GameController : MonoBehaviour {
 			m_timeLeftText.text = "Time Left: " + m_countDownAnim.getTimeRemainingSeconds().ToString ("F1") + "s";
 		}
 		
-		string debugText = " Debug Text \n";
-//		for (int i = 0; i < m_players.Length; i++) {
-//			GameObject player = m_players[i];
-//			debugText += "Player " + i + " input"+player.GetComponent<Player>().acceptInput;
-//		}
-//		m_debugText.text = debugText;
+		if (Input.GetButton("Back")) {
+			Debug.Log ("Back to menu");
+			Application.LoadLevel ("main_scene");
+		}
 		
+//		string debugText = " Debug Text \n";
+//		debugText += "\n" + Input.GetAxis ("HorizontalAxis0");
+//		debugText += "\n" + Input.GetAxis ("VerticalAxis0");
+//		m_debugText.text = debugText;
 	}
 	
 	void onGameReset() {

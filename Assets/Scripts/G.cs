@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public class G
 {
+	public int MAX_PLAYERS = 4;
 	public int SCREEN_W = 640;
 	public int SCREEN_H = 360;
 	public int GRID_SIZE = 16;
@@ -16,6 +17,7 @@ public class G
 	public float PLAYER_END_ANIM_INIT_DELAY = 0.2f;
 	public float PLAYER_END_ANIM_DELAY = 0.05f;
 	public float PLAYER_END_ANIM_END_DELAY = 0.5f;
+	public float AXIS_THRESHOLD = 0.9f;
 	public int GRID_W { get { return SCREEN_W / GRID_SIZE; } }
 	public int GRID_H { get { return SCREEN_H / GRID_SIZE; } }
 	
