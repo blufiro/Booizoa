@@ -10,13 +10,10 @@ public class GameController : MonoBehaviour {
 	public GameObject playerTemplate;
 	public GameObject playerLeftRotationTemplate;
 	public GameObject playerUpTemplate;
-	public Sprite playerLostHeadSprite;
 	public Sprite playerLostLeftRotationSprite;
 	public Sprite playerLostUpSprite;
-	public Sprite playerWonHeadSprite;
 	public Sprite playerWonLeftRotationSprite;
 	public Sprite playerWonUpSprite;
-	public Sprite playerNormalHeadSprite;
 	public Text	playerScoreStatsTextTemplate;
 	public Text okTextTemplate;
 

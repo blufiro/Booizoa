@@ -17,6 +17,8 @@ public class G
 	public float PLAYER_END_ANIM_INIT_DELAY = 0.2f;
 	public float PLAYER_END_ANIM_DELAY = 0.05f;
 	public float PLAYER_END_ANIM_END_DELAY = 0.5f;
+	public float PLAYER_OK_ANIM_DELAY = 0.8f;
+	public float PLAYER_MOVE_ANIM_DELAY = 0.5f;
 	public float AXIS_THRESHOLD = 0.9f;
 	public int GRID_W { get { return SCREEN_W / GRID_SIZE; } }
 	public int GRID_H { get { return SCREEN_H / GRID_SIZE; } }

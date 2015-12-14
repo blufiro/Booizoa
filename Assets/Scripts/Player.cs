@@ -18,10 +18,12 @@ public class Player : MonoBehaviour {
 	private GameObject m_playerHead;
 	private Direction m_chosenDir;
 	private Grid.Gid m_chosenGid;
+	private Animator m_animator;
 
 	// Use this for initialization
 	void Start () {
 		m_playerHead = this.transform.FindChild("Player Sprite Head").gameObject;
+		m_animator = m_playerHead.GetComponent<Animator>();
 	}
 	
 	// Must be called after Start() so we have a reference to child objects.
@@ -57,7 +59,7 @@ public class Player : MonoBehaviour {
 		m_chosenDir = Direction.UP;
 		
 		// reset head sprite. We shouldn't have any body parts now.
-		m_playerHead.GetComponent<SpriteRenderer>().sprite = m_gameController.playerNormalHeadSprite;
+		m_animator.SetInteger("cat_state", 0);
 	}
 	
 	// Update is called once per frame
@@ -138,8 +140,14 @@ public class Player : MonoBehaviour {
 		m_chosenDir = dir;
 		m_chosenGid = nextGid;
 		
+		m_animator.SetInteger("cat_state", 2);
+		AnimMaster.delay ("okAnimDelay", this.gameObject, G.get ().PLAYER_OK_ANIM_DELAY).onComplete("onOkAnimEnd");
 		m_gameController.onPlayerSelectionDone(m_playerIndex);
 		m_acceptInput = false;
+	}
+	
+	void onOkAnimEnd() {
+		m_animator.SetInteger("cat_state", 0);
 	}
 	
 	// Chosen direction is always set, so the player will always execute the previous move even if there was no input.
@@ -156,6 +164,13 @@ public class Player : MonoBehaviour {
 				return;
 			}
 		}
+		
+		m_animator.SetInteger("cat_state", 1);
+		AnimMaster.delay ("moveDelay", this.gameObject, G.get ().PLAYER_MOVE_ANIM_DELAY).onComplete("onMove");
+	}
+	
+	void onMove() {
+		m_animator.SetInteger("cat_state", 0);
 		Direction lastDirection = m_directions[m_directions.Count - 1];
 		m_directions.Add(m_chosenDir);
 
@@ -180,7 +195,7 @@ public class Player : MonoBehaviour {
 			return;
 		}
 		swapTextures(
-			m_gameController.playerWonHeadSprite,
+			4,
 			m_gameController.playerWonUpSprite,
 			m_gameController.playerWonLeftRotationSprite);
 	}
@@ -191,7 +206,7 @@ public class Player : MonoBehaviour {
 		}
 		m_isDead = true;
 		swapTextures(
-			m_gameController.playerLostHeadSprite,
+			3,
 			m_gameController.playerLostUpSprite,
 			m_gameController.playerLostLeftRotationSprite);
 	}
@@ -367,7 +382,7 @@ public class Player : MonoBehaviour {
 		return gids;
 	}
 	
-	private void swapTextures(Sprite head, Sprite up, Sprite leftRotation) {
+	private void swapTextures(int catState, Sprite up, Sprite leftRotation) {
 		float delaySeconds = G.get ().PLAYER_END_ANIM_INIT_DELAY;
 		foreach (GameObject bodyPart in m_sprites) {
 			GameObject closurebodyPart = bodyPart;
@@ -386,8 +401,9 @@ public class Player : MonoBehaviour {
 			}
 			delaySeconds += G.get ().PLAYER_END_ANIM_DELAY;
 		}
+		int closureCatState = catState;
 		AnimMaster.delay ("player"+m_playerIndex+"_SwapSpriteRotation", this.gameObject, delaySeconds)
-			.onCompleteDelegate(() =>  { m_playerHead.GetComponent<SpriteRenderer>().sprite = head; });
+			.onCompleteDelegate(() =>  { m_animator.SetInteger("cat_state", closureCatState); });
 		delaySeconds += G.get ().PLAYER_END_ANIM_END_DELAY;
 		AnimMaster.delay ("player"+m_playerIndex+"_SwapAnimDone", m_gameController.gameObject, delaySeconds)
 			.onComplete("onGameEndAnimDone").onCompleteParams(m_playerIndex);
