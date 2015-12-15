@@ -25,6 +25,7 @@ public class GameController : MonoBehaviour {
 	private GameObject[] m_players;
 	private Text[] m_playersSelectionDoneText;
 	private bool[] m_playersCheckSpace;
+	private bool[] m_playersMoveDone;
 	private bool[] m_playersEndDone;
 	private Grid m_grid;
 	private Anim m_countDownAnim;
@@ -55,6 +56,7 @@ public class GameController : MonoBehaviour {
 		m_players = new GameObject[numPlayers];
 		m_playersSelectionDoneText = new Text[numPlayers];
 		m_playersCheckSpace = new bool[numPlayers];
+		m_playersMoveDone = new bool[numPlayers];
 		m_playersEndDone = new bool[numPlayers];
 		m_playerScoresTexts = new List<Text>();
 		m_winningPlayerIndices = new List<int>();
@@ -181,6 +183,7 @@ public class GameController : MonoBehaviour {
 			m_playersSelectionDoneText[i].gameObject.SetActive(false);
 			player.SendMessage("onGameRoundStart");
 		}
+		// players will call onPlayerSelectionDone after selection.
 	}
 
 	public void onPlayerSelectionDone(int playerIndex) {
@@ -205,7 +208,16 @@ public class GameController : MonoBehaviour {
 		foreach(GameObject player in m_players) {
 			player.SendMessage("onExecuteChosenDirection");
 		}
-		
+		// Players will call onPlayerMoveDone after moving.
+	}
+	
+	public void onPlayerMoveDone(int playerIndex) {
+		m_playersMoveDone[playerIndex] = true;
+		foreach (bool done in m_playersMoveDone) {
+			if (!done) {
+				return;
+			}
+		}
 		AnimMaster.delay ("gameRoundStartDelay", this.gameObject, G.get ().ROUND_END_DELAY).onComplete ("onGameRoundCheckSpace");
 	}
 
@@ -218,6 +230,7 @@ public class GameController : MonoBehaviour {
 				m_players[i].SendMessage ("onGameLost");
 			}
 		}
+		// players will call onGameEndAnimDone after their animation is done.
 	}
 	
 	void onGameEndAnimDone(int playerIndex) {

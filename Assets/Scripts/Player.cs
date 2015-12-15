@@ -141,13 +141,8 @@ public class Player : MonoBehaviour {
 		m_chosenGid = nextGid;
 		
 		m_animator.SetInteger("cat_state", 2);
-		AnimMaster.delay ("okAnimDelay", this.gameObject, G.get ().PLAYER_OK_ANIM_DELAY).onComplete("onOkAnimEnd");
 		m_gameController.onPlayerSelectionDone(m_playerIndex);
 		m_acceptInput = false;
-	}
-	
-	void onOkAnimEnd() {
-		m_animator.SetInteger("cat_state", 0);
 	}
 	
 	// Chosen direction is always set, so the player will always execute the previous move even if there was no input.
@@ -155,8 +150,9 @@ public class Player : MonoBehaviour {
 		if (m_isDead) {
 			return;
 		}
-		Grid.Gid nextGid = getNextGid(m_chosenDir);
-		Grid.Gid[] gids = getGidsForTile(nextGid, m_playerHead.GetComponent<Tile>());
+		m_chosenGid = getNextGid(m_chosenDir);
+		Debug.Log("exe chosen dir " + m_playerIndex + " chosenGid: " + m_chosenGid);
+		Grid.Gid[] gids = getGidsForTile(m_chosenGid, m_playerHead.GetComponent<Tile>());
 		foreach (Grid.Gid gid in gids) {
 			if (m_gameController.Grid.getStatus(gid) != Grid.GidStatus.FREE) {
 				Debug.Log ("Not executing chosen direction " + m_chosenDir + " on player " + m_playerIndex);
@@ -164,12 +160,13 @@ public class Player : MonoBehaviour {
 				return;
 			}
 		}
-		
+		m_acceptInput = false;
 		m_animator.SetInteger("cat_state", 1);
-		AnimMaster.delay ("moveDelay", this.gameObject, G.get ().PLAYER_MOVE_ANIM_DELAY).onComplete("onMove");
+		AnimMaster.delay ("moveDelay", this.gameObject, G.get ().PLAYER_MOVE_ANIM_DURATION).onComplete("onMove");
 	}
 	
 	void onMove() {
+		Debug.Log ("player " + m_playerIndex + " onMove()");
 		m_animator.SetInteger("cat_state", 0);
 		Direction lastDirection = m_directions[m_directions.Count - 1];
 		m_directions.Add(m_chosenDir);
@@ -187,7 +184,8 @@ public class Player : MonoBehaviour {
 		m_playerHead.transform.localRotation = Quaternion.AngleAxis(getAngle(m_chosenDir), ROTATION_AXIS);
 		
 		m_numSteps++;
-		m_acceptInput = false;
+		
+		m_gameController.onPlayerMoveDone(m_playerIndex);
 	}
 	
 	void onGameWon() {
