@@ -7,6 +7,15 @@ public class TitleMenuController : MonoBehaviour {
 
 	public Text playersJoinedText;
 	List<int> playerIndices;
+	public AudioClip sfx_player_join;
+	public AudioClip sfx_player_drop;
+	public AudioClip sfx_game_start;
+
+	//This function will be called with a delay
+	private void DelayedFunction()
+	{
+		Application.LoadLevel ("game_scene");
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -28,7 +37,13 @@ public class TitleMenuController : MonoBehaviour {
 			if (playerIndices.Count > 1) {
 				Debug.Log ("Load game");
 				G.get ().players = playerIndices;
-				Application.LoadLevel ("game_scene");
+
+				Debug.Log ("Start Sound");
+				AudioSource audio = GetComponent<AudioSource>();
+				audio.clip = sfx_game_start;
+				audio.Play();
+
+				Invoke("DelayedFunction", 2.0f);
 			}
 		}
 		if (Input.GetButton("Back")) {
@@ -41,6 +56,10 @@ public class TitleMenuController : MonoBehaviour {
 			playerIndices.Add(index);
 			Debug.Log ("Add player " + index);
 			updateJoinedText();
+	
+			AudioSource audio = GetComponent<AudioSource>();
+			audio.clip = sfx_player_join;
+			audio.Play();
 		}
 	}
 	
@@ -49,6 +68,10 @@ public class TitleMenuController : MonoBehaviour {
 			playerIndices.Remove(index);
 			Debug.Log ("Remove player " + index);
 			updateJoinedText();
+
+			AudioSource audio = GetComponent<AudioSource>();
+			audio.clip = sfx_player_drop;
+			audio.Play();
 		}
 	}
 	
