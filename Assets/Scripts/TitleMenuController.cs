@@ -38,7 +38,7 @@ public class TitleMenuController : MonoBehaviour {
 				Debug.Log ("Load game");
 				G.get ().players = playerIndices;
 
-				Debug.Log ("Start Sound");
+				Debug.Log ("Playing sfx");
 				AudioSource audio = GetComponent<AudioSource>();
 				audio.clip = sfx_game_start;
 				audio.Play();

@@ -16,6 +16,9 @@ public class GameController : MonoBehaviour {
 	public Sprite playerWonUpSprite;
 	public Text	playerScoreStatsTextTemplate;
 	public Text okTextTemplate;
+	public AudioClip sfx_player_voted;
+	public AudioClip sfx_game_go;
+	public AudioClip sfx_game_restart;
 
 	public Grid Grid
 	{
@@ -155,6 +158,9 @@ public class GameController : MonoBehaviour {
 		}
 		if (m_winningPlayerIndices.Count > 1) {
 			m_goText.gameObject.SetActive(true);
+
+			playSound (sfx_game_go);
+
 			AnimMaster.delay ("gameRoundStartDelay", this.gameObject, G.get ().ROUND_START_DELAY).onComplete("onGameRoundStart");
 		} else {
 			// There might be 0 or 1 winning players at this point.
@@ -189,6 +195,10 @@ public class GameController : MonoBehaviour {
 	public void onPlayerSelectionDone(int playerIndex) {
 		Debug.Log ("onPlayerSelectionDone " + playerIndex);
 		m_playersSelectionDoneText[playerIndex].gameObject.SetActive(true);
+
+		AudioSource audio = GetComponent<AudioSource>();
+		audio.clip = sfx_player_voted;
+		audio.Play();
 		
 		// if all players are done, proceed to round end.
 		foreach (Text done in m_playersSelectionDoneText) {
@@ -236,7 +246,7 @@ public class GameController : MonoBehaviour {
 	void onGameEndAnimDone(int playerIndex) {
 		Debug.Log ("onGameEndAnimDone " + playerIndex);
 		m_playersEndDone[playerIndex] = true;
-		
+
 		// if all players are done, proceed to round end.
 		foreach (bool done in m_playersEndDone) {
 			if (!done) {
@@ -259,5 +269,13 @@ public class GameController : MonoBehaviour {
 	public void onScoreStatsDone() {
 		m_scoreStatsPopup.gameObject.SetActive(false);
 		AnimMaster.delay("gameResetDelay", this.gameObject, G.get ().GAME_RESET_DELAY).onComplete("onGameReset");
+		playSound (sfx_game_restart);
+	}
+
+	void playSound (AudioClip audioClip)
+	{
+		AudioSource audio = GetComponent<AudioSource> ();
+		audio.clip = audioClip;
+		audio.Play ();
 	}
 }
